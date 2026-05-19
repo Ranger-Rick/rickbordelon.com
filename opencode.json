@@ -12,7 +12,7 @@
       "*": "ask",
       "ls": "allow",
       "grep": "allow",
-      "bun": "allow"
+      "bun run build": "allow"
     }
   }
 }
