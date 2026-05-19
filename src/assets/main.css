@@ -116,6 +116,14 @@ body {
   text-transform: uppercase;
 }
 
+@media (max-width: 960px) {
+  .hero-title {
+    font-size: clamp(3.2rem, 10vw, 5.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+  }
+}
+
 .content-card {
   display: flex;
   align-items: center;
@@ -225,6 +233,12 @@ body {
 
   .hero-card__content {
     padding: 1.5rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.85rem, 10.5vw, 3.1rem);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
   }
 
   .content-card {
