@@ -1,6 +1,7 @@
 <script setup>
 import HeroSection from './components/HeroSection.vue'
 import FullscreenSection from './components/FullscreenSection.vue'
+import RangerSection from './components/RangerSection.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const sections = [
@@ -60,5 +61,6 @@ const sections = [
       :align="section.align"
       :inverse="index % 2 === 0"
     />
+    <RangerSection />
   </main>
 </template>

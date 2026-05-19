@@ -236,3 +236,43 @@ body {
     width: min(100% - 2rem, 46rem);
   }
 }
+
+/* Ranger Section */
+.ranger-section {
+  min-height: calc(100svh - 2rem);
+  width: 100%;
+  background: #000;
+  border: 1px solid #222;
+  border-radius: 2rem;
+  overflow: clip;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ranger-section__eyes {
+  display: flex;
+  gap: 60px;
+}
+
+.ranger-section__eye {
+  width: 120px;
+  height: 80px;
+  background: radial-gradient(ellipse, #b8d929 0%, #6b8c00 60%, #2a3d00 100%);
+  border-radius: 60% / 50%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(180, 210, 40, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.ranger-section__pupil {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 56px;
+  background: #000;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -50%);
+}
