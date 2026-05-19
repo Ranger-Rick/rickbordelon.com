@@ -15,14 +15,36 @@ const sections = [
     body: [
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer blandit, nisi id faucibus faucibus, dui velit suscipit eros, a tempus nunc mi at mauris.',
       'Curabitur ut nisl ut erat tincidunt placerat. Vivamus gravida, ipsum ac luctus finibus, arcu sapien feugiat turpis, vitae malesuada nisl lectus sit amet justo.',
-      'Suspendisse potenti. Maecenas a est ac augue consequat commodo. In non lectus sed ipsum aliquet volutpat eget non nisl.',
+      {
+        text: 'Suspendisse potenti. Maecenas a est ac augue consequat commodo. In non lectus sed ipsum aliquet volutpat eget non nisl.',
+        links: [
+          {
+            label: 'GitHub',
+            href: 'https://github.com/',
+          },
+          {
+            label: 'LinkedIn',
+            href: 'https://www.linkedin.com/',
+          },
+        ],
+      },
     ],
   },
   {
     title: 'My Life',
     align: 'right',
-    body: ['Here is my story']
-  }
+    body: [
+      {
+        text: 'Here is my story',
+        links: [
+          {
+            label: 'Future internal route',
+            href: '/about',
+          },
+        ],
+      },
+    ],
+  },
 ]
 </script>
 
