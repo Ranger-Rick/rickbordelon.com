@@ -71,3 +71,9 @@ There is no ESLint or Prettier config. Follow the conventions above by matching 
 ## Dev Server Cleanup
 
 If you start the web app to test something, always stop the dev server when you are finished.
+
+## Playwright Artifacts
+
+Any screenshots captured while using the Playwright MCP must be saved under `.playwright-mcp/`.
+
+Unless the user explicitly asks for a different location, any Playwright-generated artifacts should be placed in `.playwright-mcp/` so they do not end up in git history accidentally.
