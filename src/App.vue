@@ -1,9 +1,11 @@
 <script setup>
 import HeroSection from './components/HeroSection.vue'
 import FullscreenSection from './components/FullscreenSection.vue'
+import ImageSection from './components/ImageSection.vue'
 import RangerSection from './components/RangerSection.vue'
 import ToolsSection from './components/ToolsSection.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
+import rangerImage from './assets/images/ranger.webp'
 
 const sections = [
   {
@@ -18,7 +20,7 @@ const sections = [
   },
   {
     id: 'Education',
-    component: FullscreenSection,
+    component: ImageSection,
     title: 'Education',
     align: 'left',
     body: [
@@ -27,6 +29,8 @@ const sections = [
       '',
       'GPA: 3.76',
     ],
+    image: rangerImage,
+    imageAlt: 'Rick standing by the Louisiana Tech bulldog at his graduation'
   },
   {
     id: 'Impact',
@@ -42,6 +46,18 @@ const sections = [
   {
     id: 'tools',
     component: ToolsSection,
+  },
+  {
+    id: 'ranger-image',
+    component: ImageSection,
+    title: 'Ranger',
+    align: 'right',
+    body: [
+      'This is my cat. He is very mischevious.',
+      'He also happens to be the brains of this operation...',
+    ],
+    image: rangerImage,
+    imageAlt: 'A black cat perched on a wall shelf',
   },
   {
     id: 'my-life',
@@ -71,6 +87,8 @@ const sections = [
       :title="section.title"
       :body="section.body"
       :align="section.align"
+      :image="section.image"
+      :image-alt="section.imageAlt"
       :inverse="index % 2 === 0"
     />
   </main>
