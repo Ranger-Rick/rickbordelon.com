@@ -20,6 +20,10 @@ export const sections: Section[] = [
       {
         label: 'LinkedIn',
         href: 'https://www.linkedin.com/in/rick-bordelon'
+      },
+      {
+        label: 'Resume',
+        href: '/resume.pdf'
       }
     ],
     body: [
