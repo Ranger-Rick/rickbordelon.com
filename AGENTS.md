@@ -67,3 +67,7 @@ src/
 ## No Linting Config
 
 There is no ESLint or Prettier config. Follow the conventions above by matching existing code style.
+
+## Dev Server Cleanup
+
+If you start the web app to test something, always stop the dev server when you are finished.
