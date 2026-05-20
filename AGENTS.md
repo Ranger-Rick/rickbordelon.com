@@ -16,7 +16,7 @@ bun run preview  # preview production build
 - **Vue 3** with Composition API (`<script setup>`)
 - **Vite 8** (build tool)
 - **Tailwind CSS 4** (via `@tailwindcss/vite` plugin)
-- **JavaScript** (not TypeScript) -- `jsconfig.json` is used for path aliases
+- **TypeScript preferred where supported** -- avoid plain JavaScript files when practical
 - **Docker** for containerized deployment
 
 ## Coding Conventions
@@ -31,7 +31,14 @@ bun run preview  # preview production build
 ### File Naming
 
 - Components: PascalCase (`HeroSection.vue`, `ThemeToggle.vue`)
-- Non-component JS: camelCase (`main.js`, `vite.config.js`)
+- Non-component scripts/modules: camelCase (`main.ts`, `vite.config.ts`)
+
+### Language Preference
+
+- Prefer TypeScript for non-trivial code and new modules when the toolchain supports it
+- Avoid creating plain `.js` files if a `.ts` file is a viable option
+- In Vue components, prefer `<script setup lang="ts">` when adding or updating logic that benefits from types
+- If a file must remain JavaScript for compatibility or because conversion would add unnecessary churn, keep the change minimal
 
 ### Vue Components
 
