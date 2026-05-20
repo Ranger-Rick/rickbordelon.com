@@ -290,6 +290,7 @@ body {
   .image-section-card,
   .image-section-card--right {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .image-section-card--right .image-section-copy,
@@ -298,12 +299,13 @@ body {
   }
 
   .image-section-media {
-    min-height: 16rem;
+    min-height: 0;
+    height: 100%;
   }
 
   .image-section-media__image {
-    min-height: 16rem;
-    max-height: 38svh;
+    min-height: 0;
+    max-height: none;
   }
 
   .section-copy {
