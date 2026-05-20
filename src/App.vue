@@ -7,11 +7,14 @@ import ThemeToggle from './components/ThemeToggle.vue'
 
 const sections = [
   {
+    id: 'welcome',
+    component: FullscreenSection,
     title: 'Welcome',
-    align: 'center'
-
+    align: 'center',
   },
   {
+    id: 'about-me',
+    component: FullscreenSection,
     title: 'About Me',
     align: 'left',
     body: [
@@ -33,6 +36,12 @@ const sections = [
     ],
   },
   {
+    id: 'tools',
+    component: ToolsSection,
+  },
+  {
+    id: 'my-life',
+    component: FullscreenSection,
     title: 'My Life',
     align: 'right',
     body: [
@@ -47,6 +56,10 @@ const sections = [
       },
     ],
   },
+  {
+    id: 'ranger',
+    component: RangerSection,
+  }
 ]
 </script>
 
@@ -54,15 +67,14 @@ const sections = [
   <main>
     <ThemeToggle class="fixed top-6 right-6 z-30" />
     <HeroSection />
-    <FullscreenSection
+    <component
       v-for="(section, index) in sections"
-      :key="section.title"
+      :is="section.component"
+      :key="section.id"
       :title="section.title"
       :body="section.body"
       :align="section.align"
       :inverse="index % 2 === 0"
     />
-    <ToolsSection :inverse="sections.length % 2 === 0" />
-    <RangerSection />
   </main>
 </template>
