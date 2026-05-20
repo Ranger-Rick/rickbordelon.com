@@ -6,6 +6,7 @@ import RangerSection from './components/RangerSection.vue'
 import ToolsSection from './components/ToolsSection.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import rangerImage from './assets/images/ranger.webp'
+import educationImage from './assets/images/education.webp'
 
 const sections = [
   {
@@ -29,7 +30,7 @@ const sections = [
       '',
       'GPA: 3.76',
     ],
-    image: rangerImage,
+    image: educationImage,
     imageAlt: 'Rick standing by the Louisiana Tech bulldog at his graduation'
   },
   {
