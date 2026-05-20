@@ -47,7 +47,7 @@ export const sections: Section[] = [
     title: 'Impact',
     align: 'right',
     body: [
-      'Implemented a centralized payment processing solution that reduces credit card fees, saving an estimated average of $4k (and in some cases, up to $25k) annually',
+      'Implemented a centralized payment processing solution that reduces credit card fees, saving an estimated average of $4k (and in some cases, up to $25k) annually.',
       'Containerized existing applications, reducing QA deployment time by ~75%.',
       'Mentored coding bootcamp participants in full stack development fundamentals.',
     ],
