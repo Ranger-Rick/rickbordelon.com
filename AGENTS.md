@@ -77,3 +77,7 @@ If you start the web app to test something, always stop the dev server when you 
 Any screenshots captured while using the Playwright MCP must be saved under `.playwright-mcp/`.
 
 Unless the user explicitly asks for a different location, any Playwright-generated artifacts should be placed in `.playwright-mcp/` so they do not end up in git history accidentally.
+
+## UI Verification
+
+Any UI change must be verified at phone, tablet, and desktop viewport sizes before considering the work complete.
