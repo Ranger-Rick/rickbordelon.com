@@ -68,6 +68,9 @@ onUnmounted(() => {
           ></div>
         </div>
       </div>
+      <p class="ranger-section__disclaimer">
+        Careful! My cat Ranger is always waiting to pounce!
+      </p>
     </section>
   </div>
 </template>

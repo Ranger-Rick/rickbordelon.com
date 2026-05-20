@@ -3,20 +3,20 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-bg: #f5f5f5;
-  --color-bg-dark: #0a0a0a;
-  --color-surface: #fcfcfc;
-  --color-surface-dark: #111111;
-  --color-text: #1a1a1a;
-  --color-text-dark: #e5e5e5;
-  --color-muted: #6b7280;
-  --color-muted-dark: #9ca3af;
-  --color-border: rgba(26, 26, 26, 0.12);
-  --color-border-dark: rgba(229, 229, 229, 0.16);
-  --color-grid: rgba(26, 26, 26, 0.08);
-  --color-grid-dark: rgba(229, 229, 229, 0.08);
-  --color-glow: rgba(26, 26, 26, 0.08);
-  --color-glow-dark: rgba(229, 229, 229, 0.12);
+  --color-bg: #f6f7ec;
+  --color-bg-dark: #292520;
+  --color-surface: #f6f7ec;
+  --color-surface-dark: #121418;
+  --color-text: #292520;
+  --color-text-dark: #e5c7a9;
+  --color-muted: #675f54;
+  --color-muted-dark: #e5c6aa;
+  --color-border: rgba(41, 37, 32, 0.15);
+  --color-border-dark: rgba(229, 199, 169, 0.18);
+  --color-grid: rgba(41, 37, 32, 0.08);
+  --color-grid-dark: rgba(229, 199, 169, 0.08);
+  --color-glow: rgba(41, 37, 32, 0.08);
+  --color-glow-dark: rgba(229, 199, 169, 0.12);
 }
 
 html {
@@ -266,6 +266,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .ranger-section__eyes {
@@ -293,6 +294,20 @@ body {
   border-radius: 999px;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
   transform: translate(-50%, -50%);
+}
+
+.ranger-section__disclaimer {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  width: calc(100% - 2rem);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0.8;
 }
 
 /* Tools grid */
