@@ -1,5 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import type { PropType } from 'vue'
+
+import type { SectionAlignment, SectionBodyItem, SectionLinks } from '../types/section'
 
 const props = defineProps({
   title: {
@@ -7,7 +10,11 @@ const props = defineProps({
     required: true,
   },
   body: {
-    type: Array,
+    type: Array as PropType<SectionBodyItem[]>,
+    default: () => [],
+  },
+  links: {
+    type: Array as PropType<SectionLinks>,
     default: () => [],
   },
   inverse: {
@@ -15,39 +22,26 @@ const props = defineProps({
     default: false,
   },
   align: {
-    type: String,
+    type: String as PropType<SectionAlignment>,
     default: 'left',
-    validator: (value) => ['left', 'center', 'right'].includes(value),
+    validator: (value: SectionAlignment) => ['left', 'center', 'right'].includes(value),
   },
 })
 
 const bodyItems = computed(() => {
   return props.body
-    .map((item, index) => {
-      if (typeof item === 'string') {
-        return {
-          key: `${index}-${item}`,
-          text: item,
-          links: [],
-        }
-      }
-
-      if (!item || typeof item !== 'object') {
-        return null
-      }
-
-      return {
-        key: `${index}-${item.text ?? 'links'}`,
-        text: item.text ?? '',
-        links: Array.isArray(item.links)
-          ? item.links.filter((link) => link?.label && link?.href)
-          : [],
-      }
-    })
-    .filter((item) => item && (item.text || item.links.length))
+    .filter((item) => typeof item === 'string' && item)
+    .map((item, index) => ({
+      key: `${index}-${item}`,
+      text: item,
+    }))
 })
 
-const isExternalLink = (href) => {
+const sectionLinks = computed(() => {
+  return props.links.filter((link) => link?.label && link?.href)
+})
+
+const isExternalLink = (href: string) => {
   return /^(https?:)?\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('tel:')
 }
 </script>
@@ -66,20 +60,20 @@ const isExternalLink = (href) => {
         <h2 class="section-title">{{ title }}</h2>
         <div v-if="bodyItems.length" class="section-body">
           <div v-for="item in bodyItems" :key="item.key" class="section-body__item">
-            <p v-if="item.text">{{ item.text }}</p>
-            <div v-if="item.links.length" class="section-links">
-              <a
-                v-for="link in item.links"
-                :key="`${item.key}-${link.href}`"
-                class="section-link"
-                :href="link.href"
-                :target="isExternalLink(link.href) ? '_blank' : undefined"
-                :rel="isExternalLink(link.href) ? 'noreferrer' : undefined"
-              >
-                {{ link.label }}
-              </a>
-            </div>
+            <p>{{ item.text }}</p>
           </div>
+        </div>
+        <div v-if="sectionLinks.length" class="section-links">
+          <a
+            v-for="link in sectionLinks"
+            :key="link.href"
+            class="section-link"
+            :href="link.href"
+            :target="isExternalLink(link.href) ? '_blank' : undefined"
+            :rel="isExternalLink(link.href) ? 'noreferrer' : undefined"
+          >
+            {{ link.label }}
+          </a>
         </div>
       </div>
     </div>

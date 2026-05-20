@@ -14,6 +14,7 @@ import { sections } from './data/sections'
       :key="section.id"
       :title="section.title"
       :body="section.body"
+      :links="section.links"
       :align="section.align"
       :image="section.image"
       :image-alt="section.imageAlt"

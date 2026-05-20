@@ -1,25 +1,10 @@
-import type { Component } from 'vue'
-
 import FullscreenSection from '../components/FullscreenSection.vue'
 import ImageSection from '../components/ImageSection.vue'
 import RangerSection from '../components/RangerSection.vue'
 import ToolsSection from '../components/ToolsSection.vue'
 import rangerImage from '../assets/images/ranger.webp'
 import educationImage from '../assets/images/education.webp'
-
-type SectionAlignment = 'left' | 'center' | 'right'
-
-type SectionBodyItem = string
-
-type Section = {
-  id: string
-  component: Component
-  title?: string
-  align?: SectionAlignment
-  body?: SectionBodyItem[]
-  image?: string
-  imageAlt?: string
-}
+import type { Section } from '../types/section'
 
 export const sections: Section[] = [
   {
@@ -27,6 +12,16 @@ export const sections: Section[] = [
     component: FullscreenSection,
     title: 'About Me',
     align: 'center',
+    links: [
+      {
+        label: 'GitHub',
+        href: 'https://github.com/Ranger-Rick'
+      },
+      {
+        label: 'LinkedIn',
+        href: 'https://www.linkedin.com/in/rick-bordelon'
+      }
+    ],
     body: [
       'Senior software developer with 9+ years of experience building cross platform mobile applications and web APIs in the .NET ecosystem.',
       'Delivered mobile solutions serving nearly 8,000 pharmaccies nationwide. Proven ability to lead distributed teams, architect scalable services and ship solutions that directly impact the bottom line for customers.',
