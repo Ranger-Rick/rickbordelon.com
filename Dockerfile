@@ -1,4 +1,4 @@
-FROM oven/bun:1 AS base
+FROM oven/bun:1 AS build
 
 WORKDIR /app
 
@@ -8,6 +8,10 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
-EXPOSE 5173
+RUN bun run build
 
-CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0"]
+FROM nginx:1.29-alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
