@@ -22,3 +22,13 @@ The production container serves the built `dist/` output with `nginx` on port `8
 
 ## Image Command
 `magick "<input file>" -strip -quality 82 "src/assets/images/<output file>.webp"`
+
+---
+## AWS Commands
+Install the awscli using `brew install awscli`
+
+1. `aws login`
+2. `aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <repository base url>`
+3. Build the image: `docker build -t <repository base url>/rickbordelon/resume:<tag>`
+4. Push the image: `docker push <repository base url>/rickbordelon/resume:<tag>`
+
