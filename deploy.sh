@@ -10,7 +10,7 @@ latestImage=$AWS_REGISTRY/$image:latest
 docker build -t $taggedImage .
 docker tag $taggedImage $latestImage
 
-git tag -a $tag -m $taggedImage
+git tag -a $tag -m $tag
 git push origin $tag
 
 docker push $taggedImage
