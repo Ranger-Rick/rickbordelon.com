@@ -215,22 +215,21 @@ curl http://127.0.0.1:8080
 
 **Amazon Linux 2023:**
 
+The Caddy COPR repository does not have native Amazon Linux 2023 builds. Since Amazon Linux 2023 is RHEL 9-compatible, use the EPEL 9 repository instead:
+
 ```bash
 sudo dnf install -y 'dnf-command(copr)'
-sudo dnf copr enable -y @caddy/caddy
+
+# Detect architecture and use the appropriate EPEL 9 repo
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+  sudo dnf copr enable -y @caddy/caddy epel-9-aarch64
+else
+  sudo dnf copr enable -y @caddy/caddy epel-9-x86_64
+fi
+
 sudo dnf install -y caddy
 ```
-
-**Ubuntu:**
-
-```bash
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update
-sudo apt install -y caddy
-```
-
 Create the Caddyfile:
 
 ```bash

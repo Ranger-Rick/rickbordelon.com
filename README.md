@@ -37,10 +37,15 @@ Install the awscli using `brew install awscli`
 Amazon Linux
 `ssh -i "*.pem" <ec2 instance>`
 
-1. `sudo dnf update -y`
-2. `sudo dnf install -y docker`
-3. `sudo systemctl start docker`
-4. `sudo systemctl enable docker`
-5. `sudo usermod -aG docker $USER`
-6. `aws login --remote`
-7. `aws ecr get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "<repository url>"`
+## Important Commands
+- `sudo dnf update -y`
+- `sudo dnf install -y docker`
+- `sudo systemctl start docker`
+- `sudo systemctl enable docker`
+- `sudo usermod -aG docker $USER`
+- `aws login --remote`
+- `aws ecr get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "<repository url>"`
+- `sudo dnf copr enable -y @caddy/caddy epel-9-aarch64`
+- `sudo dnf install -y caddy`
+- `sudo systemctl enable caddy`
+- `sudo systemctl start caddy`
