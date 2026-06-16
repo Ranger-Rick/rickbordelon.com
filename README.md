@@ -32,3 +32,15 @@ Install the awscli using `brew install awscli`
 3. Build the image: `docker build -t <repository base url>/rickbordelon/resume:<tag>`
 4. Push the image: `docker push <repository base url>/rickbordelon/resume:<tag>`
 
+---
+## Server Info
+Amazon Linux
+`ssh -i "*.pem" <ec2 instance>`
+
+1. `sudo dnf update -y`
+2. `sudo dnf install -y docker`
+3. `sudo systemctl start docker`
+4. `sudo systemctl enable docker`
+5. `sudo usermod -aG docker $USER`
+6. `aws login --remote`
+7. `aws ecr get-login-password --region "us-east-1" | docker login --username AWS --password-stdin "<repository url>"`

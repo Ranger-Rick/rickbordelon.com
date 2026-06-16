@@ -2,321 +2,259 @@
 
 ## Goal
 
-Deploy this containerized Vue application to AWS with:
+Deploy this Vue application to AWS with:
 
-- Amazon ECR for image storage
-- Amazon ECS running on EC2 for container orchestration
-- no load balancer
 - a direct public IP for the EC2 host
 - HTTPS terminated on the EC2 host with `Caddy` and Let's Encrypt
 - billing monitoring so you can be alerted when spend crosses a threshold
 
-## Recommended Target Architecture
+## Deployment Options
 
-For the manual AWS setup you described, the recommended layout is:
+There are two viable approaches for this project. The **simple EC2 deployment** is recommended for a personal portfolio site.
 
-1. Build the production Docker image for the site.
-2. Push that image to Amazon ECR.
-3. Run the container in an ECS service on an EC2-backed ECS cluster.
-4. Expose the ECS task on a fixed host port such as `8080`.
-5. Assign an Elastic IP to the EC2 instance.
-6. Run `Caddy` on the EC2 host to listen on ports `80` and `443`.
-7. Let `Caddy` obtain and renew Let's Encrypt certificates.
-8. Point `rickbordelon.com` and `www.rickbordelon.com` to the Elastic IP.
-9. Use AWS Budgets and CloudWatch billing alarms for spend alerts.
+### Option A: Simple EC2 Deployment (Recommended)
+
+A single EC2 instance running Docker directly, without ECS orchestration.
+
+**Pros:**
+- Simpler mental model - just a VM running Docker
+- Easier to SSH in and debug
+- Lower learning curve
+- No ECS-specific concepts (tasks, services, clusters, IAM roles)
+- Fewer moving parts to configure and maintain
+
+**Cons:**
+- Manual scaling (need to set up Auto Scaling Groups if needed later)
+- You manage container restarts yourself (via systemd or Docker restart policies)
+- No built-in rolling deployments
+
+### Option B: ECS on EC2
+
+Container orchestration with Amazon ECS running on an EC2-backed cluster.
+
+**Pros:**
+- Built-in service management, health checks, auto-restart
+- Rolling deployments out of the box
+- Easier horizontal scaling if needed later
+
+**Cons:**
+- More moving parts (task definitions, services, clusters, multiple IAM roles)
+- Debugging is harder
+- Overkill for a simple static site
+- More complex initial setup
+
+### Verdict
+
+For a personal portfolio site, **Option A (simple EC2)** is the better choice. ECS adds complexity without meaningful benefit for a single-instance static site.
+
+---
+
+## Recommended Target Architecture (Simple EC2)
+
+1. Launch an EC2 instance with Docker installed.
+2. Pull or build the production Docker image on the instance.
+3. Run the container with Docker, exposing port `8080`.
+4. Assign an Elastic IP to the EC2 instance.
+5. Run `Caddy` on the EC2 host to listen on ports `80` and `443`.
+6. Let `Caddy` obtain and renew Let's Encrypt certificates.
+7. Point `rickbordelon.com` and `www.rickbordelon.com` to the Elastic IP.
+8. Use AWS Budgets and CloudWatch billing alarms for spend alerts.
 
 ## Production Container Notes
 
-The application now uses a production Docker image.
-
-The container:
+The application uses a production Docker image that:
 
 - builds the site with `bun run build`
 - copies the generated `dist/` output into `nginx`
 - serves the app on port `80`
 
-This is the image that should be pushed to ECR and used by ECS.
+## SSL/TLS Note
 
-## Why This Is Cheaper
+Without a load balancer or CloudFront, AWS ACM is not the right certificate path.
 
-This approach removes the Application Load Balancer completely.
-
-That reduces cost and moving parts, but it also changes a few things:
-
-- you use one EC2 instance as the public entry point
-- you point DNS at the instance Elastic IP instead of an ALB
-- you do not use ACM for the website certificate
-- HTTPS is handled on the EC2 host with `Caddy` and Let's Encrypt
-- this is best for a small single-instance site
-
-## Important SSL/TLS Note
-
-Without a load balancer or CloudFront, AWS ACM is not the right certificate path for the website itself.
-
-Reason:
-
-- ACM certificates cannot be directly attached to an ECS task
-- ACM certificates cannot be directly attached to a plain EC2-hosted web server unless you export and manage a different certificate source yourself
-
-For this no-load-balancer setup, the practical HTTPS path is:
+ACM certificates cannot be directly attached to an EC2-hosted web server. For this setup, the practical HTTPS path is:
 
 - `Caddy` running on the EC2 host
 - Let's Encrypt certificates issued automatically
 - automatic renewal handled by `Caddy`
 
-## Step-By-Step AWS Setup
+---
+
+## Step-By-Step AWS Setup (Simple EC2)
 
 ### 1. Pick Your AWS Region And Naming
 
-Use one AWS region for the full stack unless you have a specific reason not to.
+Use one AWS region for the full stack.
 
 Suggested naming:
 
-- ECR repository: `rickbordelon-com`
-- ECS cluster: `rickbordelon-production`
-- ECS service: `website-service`
-- Task definition family: `website-task`
 - EC2 instance name: `rickbordelon-web-1`
 - Elastic IP name tag: `rickbordelon-web-eip`
+- Security group: `rickbordelon-web-sg`
 
-Keep ECR, ECS, and EC2 in the same region.
+### 2. Create A Security Group
 
-### 2. Create The ECR Repository
-
-In AWS Console:
-
-1. Open `Amazon ECR`.
-2. Click `Create repository`.
-3. Choose `Private repository`.
-4. Name it `rickbordelon-com`.
-5. Leave scan settings enabled if you want basic image scanning.
-6. Create the repository.
-
-CLI example:
-
-```bash
-aws ecr create-repository --repository-name rickbordelon-com --region <aws-region>
-```
-
-### 3. Build And Push The Image To ECR
-
-Authenticate Docker to ECR:
-
-```bash
-aws ecr get-login-password --region <aws-region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<aws-region>.amazonaws.com
-```
-
-Build the image:
-
-```bash
-docker build -t rickbordelon-com .
-```
-
-Tag the image:
-
-```bash
-docker tag rickbordelon-com:latest <account-id>.dkr.ecr.<aws-region>.amazonaws.com/rickbordelon-com:latest
-```
-
-Push the image:
-
-```bash
-docker push <account-id>.dkr.ecr.<aws-region>.amazonaws.com/rickbordelon-com:latest
-```
-
-For future releases, use version tags such as `2026-05-21` or `v1` instead of only `latest`.
-
-### 4. Prepare The Network
-
-For a first ECS on EC2 deployment with low cost and low complexity, use:
-
-- one VPC
-- one public subnet to start
-- one public EC2 instance
-- one Elastic IP attached to that EC2 instance
-
-For this specific project, a single public subnet is acceptable because you are explicitly optimizing for simplicity and cost over high availability.
-
-If your account already has a usable default VPC, you can use it for the first deployment.
-
-### 5. Create Security Groups
-
-Create one security group for the ECS EC2 instance:
+Create one security group for the EC2 instance:
 
 1. Allow inbound `80` from `0.0.0.0/0`.
 2. Allow inbound `443` from `0.0.0.0/0`.
-3. Allow inbound `22` only from your IP address if you want SSH access.
+3. Allow inbound `22` only from your IP address for SSH access.
 4. Allow all outbound traffic.
 
-Why only these public ports are needed:
+Why only these public ports:
 
 - `Caddy` listens publicly on `80` and `443`
-- `Caddy` proxies traffic to the ECS task on `localhost:8080`
-- the ECS application port does not need to be exposed publicly
+- `Caddy` proxies traffic to the Docker container on `localhost:8080`
+- the container port does not need to be exposed publicly
 
-### 6. Create IAM Roles
+### 3. Create An IAM Role For EC2 (Optional)
 
-You need two AWS roles.
+If you want Session Manager access without SSH, create a role for `EC2` and attach:
 
-### ECS Task Execution Role
-
-Create a role for `Elastic Container Service Task` and attach:
-
-- `AmazonECSTaskExecutionRolePolicy`
-
-This lets ECS pull images from ECR and write logs to CloudWatch.
-
-### ECS EC2 Instance Role
-
-Create a role for `EC2` and attach:
-
-- `AmazonEC2ContainerServiceforEC2Role`
 - `AmazonSSMManagedInstanceCore`
 
-This lets the EC2 instance join the ECS cluster and gives you Session Manager access without requiring SSH.
+This is optional but useful for secure shell access without opening port 22.
 
-### 7. Create The ECS Cluster
-
-In AWS Console:
-
-1. Open `Amazon ECS`.
-2. Create a cluster.
-3. Choose the `EC2 Linux + Networking` path if the console offers it, or create a standard ECS cluster and attach EC2 capacity afterward.
-4. Name it `rickbordelon-production`.
-
-### 8. Create The EC2 Capacity For ECS
-
-The clean manual setup is:
-
-1. Create a launch template.
-2. Use an ECS-optimized Amazon Linux AMI.
-3. Choose a small instance type such as `t3.small` to start.
-4. Attach the ECS EC2 instance role.
-5. Attach the EC2 security group.
-6. Enable a public IP if you are placing the instance in a public subnet.
-7. Add user data that joins the ECS cluster.
-8. Create an Auto Scaling group from the launch template.
-9. Set desired capacity to `1`.
-10. Set minimum capacity to `1`.
-11. Set maximum capacity to `1`.
-12. Attach the Auto Scaling group to the ECS cluster as a capacity provider if the console prompts for it.
-
-Example user data:
-
-```bash
-#!/bin/bash
-echo ECS_CLUSTER=rickbordelon-production >> /etc/ecs/ecs.config
-```
-
-Low-cost default:
-
-- one ECS cluster
-- one EC2 instance
-- one running task
-
-### 9. Allocate And Attach An Elastic IP
+### 4. Launch The EC2 Instance
 
 In AWS Console:
 
 1. Open `EC2`.
-2. Open `Elastic IPs`.
-3. Allocate a new Elastic IP.
-4. Associate it with the ECS EC2 instance.
-5. Record the public IP address.
+2. Click `Launch instance`.
+3. Name it `rickbordelon-web-1`.
+4. Choose `Amazon Linux 2023` or `Ubuntu 24.04 LTS`.
+5. Choose instance type `t3.micro` or `t3.small`.
+6. Select or create a key pair for SSH access.
+7. Select the security group you created.
+8. Enable `Auto-assign public IP` or plan to attach an Elastic IP.
+9. Attach the IAM role if you created one.
+10. Launch the instance.
+
+### 5. Allocate And Attach An Elastic IP
+
+In AWS Console:
+
+1. Open `EC2` > `Elastic IPs`.
+2. Allocate a new Elastic IP.
+3. Associate it with the EC2 instance.
+4. Record the public IP address.
 
 Why use an Elastic IP:
 
 - the public address remains stable if the instance is stopped and started
 - DNS can point to a stable IP
 
-### 10. Install And Configure Caddy On The EC2 Host
+### 6. Install Docker On The EC2 Instance
+
+SSH into the instance and run:
+
+**Amazon Linux 2023:**
+
+```bash
+sudo dnf update -y
+sudo dnf install -y docker
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker ec2-user
+```
+
+**Ubuntu:**
+
+```bash
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker ubuntu
+```
+
+Log out and back in for the group change to take effect.
+
+### 7. Build Or Pull The Docker Image
+
+**Option A: Build on the instance**
+
+Clone the repo and build:
+
+```bash
+git clone <your-repo-url> ~/app
+cd ~/app
+docker build -t rickbordelon-com .
+```
+
+**Option B: Pull from a registry**
+
+If you push to Docker Hub or ECR:
+
+```bash
+docker pull <registry>/rickbordelon-com:latest
+docker tag <registry>/rickbordelon-com:latest rickbordelon-com:latest
+```
+
+### 8. Run The Docker Container
+
+Run the container with automatic restart:
+
+```bash
+docker run -d \
+  --name website \
+  --restart unless-stopped \
+  -p 8080:80 \
+  rickbordelon-com:latest
+```
+
+Verify it's running:
+
+```bash
+curl http://127.0.0.1:8080
+```
+
+### 9. Install And Configure Caddy
 
 `Caddy` will be the public web server on the instance.
 
-It will:
+**Amazon Linux 2023:**
 
-- listen on `80` and `443`
-- obtain HTTPS certificates from Let's Encrypt
-- proxy requests to the ECS task on `localhost:8080`
+```bash
+sudo dnf install -y 'dnf-command(copr)'
+sudo dnf copr enable -y @caddy/caddy
+sudo dnf install -y caddy
+```
 
-You can install it using SSH or Session Manager after the instance is running.
+**Ubuntu:**
 
-Example high-level steps on the EC2 host:
+```bash
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install -y caddy
+```
 
-1. Install `Caddy`.
-2. Enable and start the `caddy` service.
-3. Copy the repo's example `Caddyfile` to `/etc/caddy/Caddyfile`.
-4. Reload `Caddy`.
+Create the Caddyfile:
 
-Example `Caddyfile`:
-
-```caddy
+```bash
+sudo tee /etc/caddy/Caddyfile << 'EOF'
 rickbordelon.com, www.rickbordelon.com {
   encode gzip zstd
   reverse_proxy 127.0.0.1:8080
 }
+EOF
 ```
 
-The same example is checked into this repo at `./Caddyfile`.
+Enable and start Caddy:
+
+```bash
+sudo systemctl enable caddy
+sudo systemctl start caddy
+```
 
 Important:
 
-- the DNS records must already point to the Elastic IP before certificate issuance can succeed
+- DNS records must already point to the Elastic IP before certificate issuance can succeed
 - ports `80` and `443` must be reachable from the internet
 
-### 11. Create The Task Definition
-
-In ECS:
-
-1. Create a new task definition.
-2. Choose launch type compatibility `EC2`.
-3. Name it `website-task`.
-4. Set task execution role to the ECS task execution role.
-5. Use `bridge` network mode.
-6. Add one container.
-7. Use the image URI from ECR.
-8. Set the container port to `80`.
-9. Set the host port to `8080`.
-10. Bind the protocol as `TCP`.
-11. Add a CloudWatch log group such as `/ecs/website-service`.
-12. Set reasonable CPU and memory values for the container.
-13. Save the task definition.
-
-Suggested starting resources:
-
-- CPU: `256`
-- Memory: `512`
-
-Why use a fixed host port:
-
-- `Caddy` needs a stable local upstream to proxy to
-- `127.0.0.1:8080` is simple and predictable for a single-instance deployment
-
-Tradeoff:
-
-- only one copy of this task can bind to port `8080` on the instance at a time
-- that is acceptable for this small single-instance project
-
-### 12. Create The ECS Service
-
-In ECS:
-
-1. Open the `rickbordelon-production` cluster.
-2. Create a service.
-3. Use launch type `EC2`.
-4. Select the `website-task` task definition.
-5. Name the service `website-service`.
-6. Set desired task count to `1`.
-7. Do not attach a load balancer.
-8. Create the service.
-
-After the service starts, confirm:
-
-- the task is running
-- the container is bound on the EC2 host at port `8080`
-- `curl http://127.0.0.1:8080` works on the EC2 instance
-
-### 13. Point The Domain To The EC2 Instance
+### 10. Point The Domain To The EC2 Instance
 
 If you use Route 53:
 
@@ -325,39 +263,47 @@ If you use Route 53:
 3. Create an `A` record for `rickbordelon.com` pointing to the Elastic IP.
 4. Create an `A` record for `www.rickbordelon.com` pointing to the same Elastic IP.
 
-If DNS is managed outside Route 53:
+If DNS is managed elsewhere, create the same `A` records with your DNS provider.
 
-1. Create an `A` record for `rickbordelon.com` pointing to the Elastic IP.
-2. Create an `A` record for `www.rickbordelon.com` pointing to the same Elastic IP.
-
-### 14. Verify HTTPS
+### 11. Verify HTTPS
 
 Verify all of the following:
 
-1. `http://rickbordelon.com` redirects or serves correctly through `Caddy`.
+1. `http://rickbordelon.com` redirects to HTTPS.
 2. `https://rickbordelon.com` loads with a valid certificate.
 3. `https://www.rickbordelon.com` loads with a valid certificate.
-4. `systemctl status caddy` shows the service as healthy.
-5. `journalctl -u caddy` does not show certificate or proxy errors.
-6. The ECS service stays healthy after several minutes.
+4. `sudo systemctl status caddy` shows the service as healthy.
+5. `sudo journalctl -u caddy` does not show certificate or proxy errors.
 
-### 15. Update And Redeploy Later
+### 12. Update And Redeploy Later
 
 For each deployment:
 
-1. Build a new Docker image.
-2. Tag it with a new version.
-3. Push it to ECR.
-4. Create a new ECS task definition revision using the new image tag.
-5. Update the ECS service to use the new revision.
-6. Confirm the service restarts cleanly.
-7. Confirm `Caddy` still proxies successfully to `127.0.0.1:8080`.
+```bash
+# SSH into the instance
+cd ~/app
+git pull
+
+# Rebuild and restart the container
+docker build -t rickbordelon-com .
+docker stop website
+docker rm website
+docker run -d \
+  --name website \
+  --restart unless-stopped \
+  -p 8080:80 \
+  rickbordelon-com:latest
+```
+
+Or create a simple deploy script on the instance.
+
+---
 
 ## Billing Monitoring And Spend Alerts
 
 AWS does not provide a true hard cap that guarantees all charges stop at an exact dollar amount.
 
-What AWS does provide well:
+What AWS does provide:
 
 - budget notifications
 - CloudWatch billing alarms
@@ -365,7 +311,7 @@ What AWS does provide well:
 
 Use both AWS Budgets and a CloudWatch billing alarm.
 
-### 16. Enable Billing Alerts In The Account
+### 13. Enable Billing Alerts In The Account
 
 In the AWS Billing console:
 
@@ -376,7 +322,7 @@ In the AWS Billing console:
 
 This step is required before CloudWatch can alarm on estimated charges.
 
-### 17. Create An SNS Topic For Alerts
+### 14. Create An SNS Topic For Alerts
 
 In AWS Console:
 
@@ -387,7 +333,7 @@ In AWS Console:
 
 You can reuse this topic for Budgets and CloudWatch alarms.
 
-### 18. Create An AWS Budget
+### 15. Create An AWS Budget
 
 In the Billing console:
 
@@ -407,7 +353,7 @@ Example:
 - alert at `$20`
 - alert at `$25`
 
-### 19. Create A CloudWatch Billing Alarm
+### 16. Create A CloudWatch Billing Alarm
 
 In CloudWatch:
 
@@ -426,43 +372,134 @@ Important:
 - billing metrics are published in `us-east-1`
 - this alarm is useful as a second line of visibility alongside AWS Budgets
 
-### 20. Optional: Add Budget Actions Later
-
-If you want AWS to take action when spend crosses a threshold, you can add a budget action.
-
-Examples:
-
-- restrict IAM permissions for deployment users
-- invoke automation that stops the EC2 instance
-- invoke automation that updates the ECS service desired count to `0`
-
-Do not treat this as a guaranteed hard stop. Billing data can lag, and some charges can continue before the automation runs.
+---
 
 ## Cost-Control Defaults For This Project
 
 For a low-risk starting point, use these defaults:
 
-- one ECR repository
-- one ECS cluster
-- one EC2 instance
-- one ECS task
+- one EC2 instance (`t3.micro` or `t3.small`)
 - one Elastic IP
 - no load balancer
 - no NAT Gateway
-- CloudWatch log retention set to `7` or `14` days
+- no ECS/ECR (unless you want centralized image storage)
 - monthly AWS Budget created before production traffic is sent
 
-## Working Recommendation
+---
 
-For this application, the best manual AWS path is:
+## Alternative: Even Simpler Static Deployment
 
-1. build and tag the production image
-2. push the image to Amazon ECR
-3. run it on ECS using one EC2 instance
-4. bind the ECS task to host port `8080`
-5. attach an Elastic IP to the EC2 host
-6. use `Caddy` on the EC2 host for HTTPS with Let's Encrypt
-7. point DNS directly to the Elastic IP
-8. create AWS Budgets and a CloudWatch billing alarm before going live
+If you want to skip Docker entirely, you can:
 
-This keeps the deployment cheaper and simpler than an ALB-based design, while still giving you HTTPS and basic cost controls.
+1. Build the static files locally: `bun run build`
+2. Copy the `dist/` directory to the EC2 instance
+3. Serve directly with Caddy or nginx
+
+Example Caddyfile for static files:
+
+```caddy
+rickbordelon.com, www.rickbordelon.com {
+  encode gzip zstd
+  root * /var/www/rickbordelon.com
+  file_server
+}
+```
+
+This removes Docker from the equation entirely, which may be simpler for a static site.
+
+---
+
+## ECS Deployment (Reference)
+
+The original ECS-based deployment instructions are preserved below for reference. Use these only if you specifically want container orchestration features.
+
+<details>
+<summary>Click to expand ECS deployment instructions</summary>
+
+### ECS Setup Overview
+
+This approach uses:
+
+- Amazon ECR for image storage
+- Amazon ECS running on EC2 for container orchestration
+- Same Caddy + Let's Encrypt setup for HTTPS
+
+### Create The ECR Repository
+
+In AWS Console:
+
+1. Open `Amazon ECR`.
+2. Click `Create repository`.
+3. Choose `Private repository`.
+4. Name it `rickbordelon-com`.
+5. Create the repository.
+
+CLI example:
+
+```bash
+aws ecr create-repository --repository-name rickbordelon-com --region <aws-region>
+```
+
+### Build And Push The Image To ECR
+
+Authenticate Docker to ECR:
+
+```bash
+aws ecr get-login-password --region <aws-region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<aws-region>.amazonaws.com
+```
+
+Build, tag, and push:
+
+```bash
+docker build -t rickbordelon-com .
+docker tag rickbordelon-com:latest <account-id>.dkr.ecr.<aws-region>.amazonaws.com/rickbordelon-com:latest
+docker push <account-id>.dkr.ecr.<aws-region>.amazonaws.com/rickbordelon-com:latest
+```
+
+### Create IAM Roles
+
+You need two AWS roles:
+
+**ECS Task Execution Role** - Create a role for `Elastic Container Service Task` and attach:
+- `AmazonECSTaskExecutionRolePolicy`
+
+**ECS EC2 Instance Role** - Create a role for `EC2` and attach:
+- `AmazonEC2ContainerServiceforEC2Role`
+- `AmazonSSMManagedInstanceCore`
+
+### Create The ECS Cluster
+
+1. Open `Amazon ECS`.
+2. Create a cluster named `rickbordelon-production`.
+3. Choose `EC2 Linux + Networking`.
+
+### Create EC2 Capacity For ECS
+
+1. Create a launch template with an ECS-optimized AMI.
+2. Choose `t3.small` instance type.
+3. Attach the ECS EC2 instance role.
+4. Add user data: `#!/bin/bash\necho ECS_CLUSTER=rickbordelon-production >> /etc/ecs/ecs.config`
+5. Create an Auto Scaling group with desired/min/max capacity of `1`.
+
+### Create The Task Definition
+
+1. Create task definition named `website-task`.
+2. Launch type: `EC2`.
+3. Network mode: `bridge`.
+4. Container port: `80`, Host port: `8080`.
+5. CPU: `256`, Memory: `512`.
+
+### Create The ECS Service
+
+1. Create service named `website-service`.
+2. Task definition: `website-task`.
+3. Desired count: `1`.
+4. No load balancer.
+
+### ECS Redeployment
+
+1. Build and push new image to ECR.
+2. Create new task definition revision.
+3. Update service to use new revision.
+
+</details>
