@@ -4,7 +4,7 @@ import { computed } from 'vue'
 const props = defineProps({
   title: {
     type: String,
-    required: true,
+    default: '',
   },
   body: {
     type: Array,
@@ -25,7 +25,7 @@ const props = defineProps({
   align: {
     type: String,
     default: 'left',
-    validator: (value) => ['left', 'right'].includes(value),
+    validator: (value) => ['left', 'right', 'center'].includes(value),
   },
 })
 
@@ -62,6 +62,8 @@ const isExternalLink = (href) => {
 const imageAltText = computed(() => {
   return props.imageAlt || props.title
 })
+
+const imageOnly = computed(() => !props.title && bodyItems.value.length === 0)
 </script>
 
 <template>
@@ -70,12 +72,15 @@ const imageAltText = computed(() => {
       :class="[
         'section-card',
         'image-section-card',
-        `image-section-card--${props.align}`,
+        imageOnly ? 'image-section-card--image-only' : `image-section-card--${props.align}`,
         props.inverse ? 'surface-inverse' : 'surface-normal',
       ]"
     >
-      <div :class="['section-copy', 'image-section-copy', `section-copy--${props.align}`]">
-        <h2 class="section-title">{{ title }}</h2>
+      <div
+        v-if="!imageOnly"
+        :class="['section-copy', 'image-section-copy', `section-copy--${props.align}`]"
+      >
+        <h2 v-if="title" class="section-title">{{ title }}</h2>
         <div v-if="bodyItems.length" class="section-body">
           <div v-for="item in bodyItems" :key="item.key" class="section-body__item">
             <p v-if="item.text">{{ item.text }}</p>

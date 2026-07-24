@@ -4,6 +4,7 @@ import RangerSection from '../components/RangerSection.vue'
 import ToolsSection from '../components/ToolsSection.vue'
 import rangerImage from '../assets/images/ranger.webp'
 import educationImage from '../assets/images/education.webp'
+import bordelonsbrewImage from '../assets/images/bordelonsbrew.webp'
 import type { Section } from '../types/section'
 
 export const sections: Section[] = [
@@ -80,7 +81,13 @@ export const sections: Section[] = [
     body: [
       'Based in north Louisiana with my partner, cat, and dog, I love to read and play rougelike video games.',
       'I brew my own beer and make my own pickles! Let\'s share a snack sometime!',
-    ],
+    ]
+  },
+  {
+    id: 'bordelons-brew',
+    component: ImageSection,
+    image: bordelonsbrewImage,
+    align: 'center'
   },
   {
     id: 'ranger',
