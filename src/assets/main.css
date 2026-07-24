@@ -304,6 +304,10 @@ body {
   .image-section-media__image {
     min-height: 100%;
   }
+
+  .image-section-card--image-only .image-section-media__image {
+    object-fit: contain;
+  }
 }
 
 @media (max-width: 640px) {
@@ -367,6 +371,10 @@ body {
   .image-section-media__image {
     min-height: 0;
     max-height: none;
+  }
+
+  .image-section-card--image-only .image-section-media__image {
+    object-fit: contain;
   }
 
   .section-copy {
