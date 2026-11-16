@@ -21,6 +21,7 @@
 
 html {
   font-family: system-ui, -apple-system, sans-serif;
+  --layout-max-width-desktop: 112rem;
   --theme-bg: var(--color-bg);
   --theme-surface: var(--color-surface);
   --theme-text: var(--color-text);
@@ -69,6 +70,13 @@ body {
 .section-shell {
   min-height: 100svh;
   padding: 1rem;
+}
+
+@media (min-width: 1600px) {
+  .section-shell {
+    max-width: var(--layout-max-width-desktop);
+    margin-inline: auto;
+  }
 }
 
 .section-card {
